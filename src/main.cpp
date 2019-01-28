@@ -20,6 +20,10 @@
 // data wire is connected with GPIO2:
 #define ONE_WIRE_BUS 2
 
+// if you want to monitor the battery level connect A0 thru 220kO with 3.3V
+#define BATT_LEVEL A0
+// if not set BATT_LEVEL to 0
+
 #define RESET_CONFIG_PIN 4
 
 // setup one wire instance:
@@ -32,6 +36,8 @@ WiFiManagerParameter *ccu_variable;
 void configModeCallback (WiFiManager *myWiFiManager);
 void saveConfigCallback();
 void queryTemperature();
+void queryBattery();
+void regaCall(String url);
 
 void setup()
 {
@@ -89,6 +95,8 @@ void setup()
   sensors.setResolution(12);
   Serial.println("Query Sensor");
   queryTemperature();
+  delay(500);
+  queryBattery();
   delay(1000);
   Serial.println("Going to sleep");
   // sleeptime are microseconds so we have to multiply
@@ -100,28 +108,53 @@ void configModeCallback (WiFiManager *myWiFiManager) {
  digitalWrite(LED_BUILTIN,LOW);
 }
 
-// Temperatur abfragen und wenn neu zur CCU senden
-void queryTemperature() {
 
+//check battery level and send to ccu
+void queryBattery() {
+  if (BATT_LEVEL != 0) {
+    // template
+    String requestUrl = "http://{ccuip}:8181/tclrega.exe?x=dom.GetObject(ID_SYSTEM_VARIABLES).Get(\"Bat_{varname}\").State({batt});";
+    // load value from analog input
+    double  batteryLevel = analogRead(BATT_LEVEL);
+    // calculate voltage based on a 220k resistor
+    batteryLevel = batteryLevel / 188.31;
+    Serial.print("Battery :");
+    Serial.println(batteryLevel);
+    // replace values
+    requestUrl.replace("{ccuip}", deviceSettings.ccu_ip.toString());
+    requestUrl.replace("{varname}", String(deviceSettings.ccu_variable));
+    requestUrl.replace("{batt}", String(batteryLevel));
+    // send call
+    regaCall(requestUrl);
+  }
+}
+
+// make a http call
+void regaCall(String url) {
+  HTTPClient http;
+  Serial.print("Url is:");
+  Serial.println(url);
+  // send request
+  http.begin(url);
+  http.GET();
+  // end http
+  http.end();
+}
+
+
+// request temperature from sensor and send this to ccu
+void queryTemperature() {
   float temperature;
   // get the temperature
   sensors.requestTemperatures();
   temperature = sensors.getTempCByIndex(0);
-
-  HTTPClient http;
   // ccu set variable template
   String requestUrl = "http://{ccuip}:8181/tclrega.exe?x=dom.GetObject(ID_SYSTEM_VARIABLES).Get(\"{varname}\").State({temp});";
   // replace variables
   requestUrl.replace("{ccuip}", deviceSettings.ccu_ip.toString());
   requestUrl.replace("{varname}", String(deviceSettings.ccu_variable));
   requestUrl.replace("{temp}", String(temperature));
-  Serial.print("Url is:");
-  Serial.println(requestUrl);
-  // send request
-  http.begin(requestUrl);
-  http.GET();
-  // end http
-  http.end();
+  regaCall(requestUrl);
 }
 
 void saveConfigCallback () {
