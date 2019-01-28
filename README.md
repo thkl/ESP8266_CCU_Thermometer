@@ -1,5 +1,11 @@
 # ESP8266_CCU_Thermometer
 
+Compiling
+=========
+PlatformIO: this project is ready to use on PlatformIO
+ArduinoIDE: src/* is what you need. You have to add WifiManager and DallasTemperature to your libraries.
+
+
 Config
 ======
 Just connect with your phone to the AccessPoint ESP_Thermometer.
