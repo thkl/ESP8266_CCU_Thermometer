@@ -2,4 +2,4 @@
 
 Config : Just connect with your phone to the AccessPoint ESP_Thermometer
 
-Reset To default : Press and hole the ResetSettings Button (connected to PIN D2) and reset the ESP
+Reset To default : Press and hold the ResetSettings Button (connected to PIN D2) and reset the ESP (or powercycle)
