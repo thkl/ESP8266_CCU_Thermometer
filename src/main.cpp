@@ -14,7 +14,7 @@
 #include "Settings.h"
 
 // Time in seconds the ESP goes to sleep
-#define SLEEP_TIME 600
+#define SLEEP_TIME 3600
 #define HOSTNAME "ESP_Thermometer"
 
 // data wire is connected with GPIO2:
